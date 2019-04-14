@@ -1,6 +1,7 @@
 const
 	ReadLine = require('readline'),
 	colors = require('colors/safe');
+const pJson = require('./package.json');
 
 // S
 process.on('uncaughtException', err=> {
@@ -145,10 +146,13 @@ function rndArray(array, id, floo) {
 	return nv;
 }
 
+const zleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+
 global._h = module.exports = {
 	con, ccon, dateF,
 	rand, rl, now,
 	setTitle, setColorsM,
 	rndArray, colors,
 	setTime, getTime,
+	pJson, zleep,
 };

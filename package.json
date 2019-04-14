@@ -1,6 +1,6 @@
 {
   "name": "hsautoclicker",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "",
   "main": "index.js",
   "dependencies": {
@@ -25,5 +25,9 @@
   "bugs": {
     "url": "https://github.com/xTCry/hsAutoClicker/issues"
   },
-  "homepage": "https://github.com/xTCry/hsAutoClicker#readme"
+  "homepage": "https://github.com/xTCry/hsAutoClicker#readme",
+  "auto-updater":{
+    "repo": "xTCry/hsAutoClicker",
+    "branch": "master"
+  }
 }
