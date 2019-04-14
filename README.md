@@ -39,11 +39,10 @@ node index.js -t AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 - `help`       - список доступных команд
 - `tap`        - вкл/выкл автокликера
 - `drop`       - вывести коины
-- `ad [sum]`   - задать при каком счете выводить коины
+- `ad`         - задать при каком счете выводить коины
 - `update`     - выполнить обновление
 - `autoupdate` - включить автоматическое обновление
 - `checkupdates` - проверить обновления
 
-  
 
 [![Донат](https://img.shields.io/badge/Донат-Qiwi-orange.svg)](https://qiwi.me/xtcry)

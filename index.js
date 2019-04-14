@@ -9,6 +9,7 @@ const {
 } = require("./helper");
 
 const DEV_ID = /*vk.com/id*/191039467,
+	GROUP_ID = -167822712,
 	LINK_XTCOIN = 0? "u.to/c0UeFQ": "xtcoin.mdewo.com" /*: "vk.cc/9gjvSG"*/;
 
 const 
@@ -48,7 +49,7 @@ rl.on("line", async (line) => {
 			ccon("-- hsAC --", "red");
 			ccon("tap 		- вкл/выкл кликер");
 			ccon("drop 		- вывести коины");
-			ccon("ad [sum] 	- при каком счете выводить");
+			ccon("ad	 	- задать значение автовывода");
 			break;
 
 		case 'ad':
@@ -221,10 +222,22 @@ async function startClicker() {
 async function initUpdates() {
 	con("VK Updates установлен");
 
-	/*updates.on('message', async (context, next) => {
-		const { text } = context;
+	updates.on('message', async (context, next) => {
+		const { text, isOutbox, peerId } = context;
+
+		if(isOutbox && peerId == GROUP_ID) {
+			if(text == "!stop") {
+				vbtap = false;
+				con("Автокликер: [" + colors.bold("Отключен") + "] SMS");
+			}
+			else if(text == "!start") {
+				vbtap = true;
+				con("Автокликер: [" + colors.bold("Запущен") + "] SMS");
+			}
+		}
+
 		await next();
-	});*/
+	});
 
 	updates.hear(matchUpTop, async (context, next)=> {
 		const { text } = context;
@@ -252,7 +265,7 @@ async function initUpdates() {
 async function sendClick() {
 	let message = "Клик (у тебя " + clickNum  + "+ кликов) [hsAC]";
 	let res = await vk.api.messages.send({
-		peer_id: -167822712,
+		peer_id: GROUP_ID,
 		message,
 		payload: '"tap"',
 	});
@@ -262,7 +275,7 @@ async function sendClick() {
 async function sendDrop() {
 	let message = "Вывести коины на кошелек VK Coins";
 	let res = await vk.api.messages.send({
-		peer_id: -167822712,
+		peer_id: GROUP_ID,
 		message,
 		payload: '"drop"',
 	});
