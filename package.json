@@ -1,0 +1,29 @@
+{
+  "name": "hsautoclicker",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "dependencies": {
+    "colors": "^1.3.3",
+    "vk-io": "^4.0.0-rc.16"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xTCry/hsAutoClicker.git"
+  },
+  "keywords": [
+    "vk",
+    "clicker",
+    "hs"
+  ],
+  "author": "xTCry (Vladislav Khr)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/xTCry/hsAutoClicker/issues"
+  },
+  "homepage": "https://github.com/xTCry/hsAutoClicker#readme"
+}
