@@ -1,9 +1,11 @@
 {
   "name": "hsautoclicker",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "",
   "main": "index.js",
   "dependencies": {
+    "@sentry/node": "^5.0.8",
+    "auto-updater": "^1.0.2",
     "colors": "^1.3.3",
     "vk-io": "^4.0.0-rc.16"
   },
@@ -26,7 +28,7 @@
     "url": "https://github.com/xTCry/hsAutoClicker/issues"
   },
   "homepage": "https://github.com/xTCry/hsAutoClicker#readme",
-  "auto-updater":{
+  "auto-updater": {
     "repo": "xTCry/hsAutoClicker",
     "branch": "master"
   }

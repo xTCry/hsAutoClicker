@@ -3,6 +3,7 @@
 	Description: Overseer application
 	Created by: xTCry
 	Date: 14.04.2019 17:31
+	Idea from @TemaSM
 */
 
 const AutoUpdater = require('auto-updater'),
@@ -113,19 +114,20 @@ autoupdater.on('error', (name, e)=> {
 	}
 });
 
-if (checkUpdates) {
-	autoupdater.fire('check');
-}
 
 
 function notifyToRestart () {
 	if (needRestart)
 		con('Для применения обновления требуется перезапуск бота!', 'white', 'Green');
 }
-setInterval(notifyToRestart, 5 * 60 * 1e3);
+setInterval(notifyToRestart, 6e5);
 
 (async () => {
 	await zleep(10);
+
+	if (checkUpdates) {
+		autoupdater.fire('check');
+	}
 
 	rl.on("line", async (line) => {
 		let temp;

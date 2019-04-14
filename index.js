@@ -127,6 +127,8 @@ for (let argn = 2; argn < process.argv.length; argn++) {
 
 // Init app
 (async _=> {
+	setUTitle("Loading app");
+
 	if(!VK_TOKEN) {
 		let succ = await initToken();
 		if(!succ) { process.exit(); }
@@ -146,6 +148,7 @@ for (let argn = 2; argn < process.argv.length; argn++) {
 		let user = (await vk.api.users.get({ name_case: "gen" }))[0];
 		USER_ID = user.id;
 		con("Зайдено за аккаунт "+ "["+user.first_name+" "+user.last_name+"]" + "(@id"+ USER_ID +")");
+		setUTitle("Ready");
 		initUpdates();
 		startClicker();
 	} catch(error) {
@@ -186,6 +189,7 @@ async function startClicker() {
 	clickerTTL = setInterval(async _=> {
 		if(!vbtap || waitTAP && (now() - waitTAP) < 0) {
 			// console.log("wait: ", waitTAP);
+			setUTitle("Wait... "+(now() - waitTAP));
 			return;
 		}
 		sWait(60);
@@ -198,11 +202,13 @@ async function startClicker() {
 			await sendClick();
 			!!rand(0,2) && await sendClick();
 			sWait((clickNum%8==0)? 8*rand(1,3): false);
+			setUTitle("Process Tap ["+clickNum+"]");
 		} catch(e) {
 			// TODO: Обработка капчи -> пауза
 
 			if(e.code == 5) clickerTTL && clearInterval(clickerTTL);
 			else if(e.code == 14) {
+				setUTitle("Captcha wait...");
 				con("Ждём 1.5 минуты...");
 				waitTAP = now()+60*(++fCapcha)*0.9;
 			}
@@ -273,7 +279,7 @@ function catchMsg(e, s) {
 
 function setUTitle(message) {
 	let temp = "";
-	showLinkAdv && (temp += "[gitHub.com/xTCry/hsAutoClicker/] - ");
+	false && (temp += "[gitHub.com/xTCry/hsAutoClicker/] - ");
 	temp += ("hsAutoClicker");
 	temp += (" [" + pJson.version + "]");
 	USER_ID && (temp += " (@id" + USER_ID +  ")");
