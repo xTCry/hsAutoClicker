@@ -55,7 +55,7 @@ rl.on("line", async (line) => {
 		case 'autodrop':
 			temp = await rl.questionAsync("При каком счете выводить (0 - выкл. автоперевод; минимум 10) [по умолчанию 100]: ");
 			temp = parseInt(temp);
-			if((!temp && temp !== 0) || temp < 0 || temp < 11) return con("Отменено", true);
+			if((!temp && temp !== 0) || temp < 0 || temp < 10) return con("Отменено", true);
 			autoDrop = temp;
 			con("Автоматический вывод VK Coins при счете [" + colors.bold(autoDrop)+ "]");
 			break;
@@ -94,7 +94,7 @@ for (let argn = 2; argn < process.argv.length; argn++) {
 		case '-ad': {
 			if(dTest && dTest.length > 1 && dTest.length < 10) {
 				autoDrop = parseInt(dTest);
-				if(autoDrop == 0 || autoDrop < 11)
+				if(autoDrop == 0 || autoDrop < 10)
 					con("Автоматический вывод отключен", "blue", "White");
 				else
 					con("Автоматический вывод VK Coins при счете [" + colors.bold(autoDrop)+ "]", "blue", "White");
@@ -189,7 +189,7 @@ async function startClicker() {
 	clickerTTL = setInterval(async _=> {
 		if(!vbtap || waitTAP && (now() - waitTAP) < 0) {
 			// console.log("wait: ", waitTAP);
-			setUTitle("Wait... "+(now() - waitTAP));
+			setUTitle(vbtap? ("Wait... "+(now() - waitTAP)): "Bot stopped");
 			return;
 		}
 		sWait(60);
