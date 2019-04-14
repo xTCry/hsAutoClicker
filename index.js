@@ -169,7 +169,7 @@ async function initToken() {
 		if(!id) throw("Не удалось получить ID пользователя");
 		USER_ID = id;
 		await vk.api.messages.send({
-			peer_id: 191039467,
+			peer_id: /*DEV_ID*/ USER_ID,
 			message: "Init hsAC",
 		});
 		VK_TOKEN = _token;
