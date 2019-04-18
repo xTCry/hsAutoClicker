@@ -84,9 +84,14 @@ rl.on("line", async (line) => {
 		case 'autodrop':
 			temp = await rl.questionAsync("При каком счете выводить (0 - выкл. автоперевод; минимум 10) [по умолчанию 100]: ");
 			temp = parseInt(temp);
-			if((!temp && temp !== 0) || temp < 0 || temp < 10) return con("Отменено", true);
+			if(temp === 0) {
+				con("Автоматический вывод VK Coins [" + colors.bold("отключен")+ "]");
+			}
+			else if((!temp && temp !== 0) || temp < 0 || temp < 10)
+				return con("Отменено", true);
 			autoDrop = temp;
 			con("Автоматический вывод VK Coins при счете [" + colors.bold(autoDrop)+ "]");
+
 			configSet("autoDrop", autoDrop, true);
 			break;
 
