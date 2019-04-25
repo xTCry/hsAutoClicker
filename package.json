@@ -32,6 +32,6 @@
   "homepage": "https://github.com/xTCry/hsAutoClicker#readme",
   "auto-updater": {
     "repo": "xTCry/hsAutoClicker",
-    "branch": "master"
+    "branch": "lermo"
   }
 }
