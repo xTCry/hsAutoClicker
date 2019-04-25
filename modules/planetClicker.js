@@ -6,7 +6,7 @@ const GROUP_ID = -181268215;
 const {
 	con, ccon, dateF, setTitle,
 	rand, rl, now, colors, pJson,
-	beep, configSet,
+	beep, configSet, zleep,
 	StateCmd, stateCmd,
 } = require("../lib/helper");
 
@@ -69,6 +69,10 @@ class Module {
 
 					break;
 
+				case 'up':
+				case 'pup':
+					tryUpgrade();
+					break;
 
 				case 't':
 				case 'tap':
@@ -80,7 +84,8 @@ class Module {
 				case 'h':
 				case 'help':
 				case '?':
-					// ccon("-- planetClicker --");
+					ccon("-- planetClicker --");
+					ccon("pup		- попробовать улучшить планету");
 					break;
 
 			}
@@ -176,6 +181,15 @@ class Module {
 			message,
 			payload: '{"command":"action","item":"upgrade"}',
 		});
+
+		await zleep(10);
+
+		let res2 = await this.vk.api.messages.send({
+			peer_id: GROUP_ID,
+			message,
+			payload: '{"command":"confirm","item":"upgrade"}',
+		});
+
 		!this.hideSpam && con("Try Upgrade...");
 		return this;
 	}
