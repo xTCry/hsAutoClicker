@@ -4,6 +4,10 @@ const
 	Overseer = require('./lib/Overseer'),
 	AntiCaptcha = require('anti-captcha');
 
+
+const HappySanta = require('./modules/happySanta'),
+	PlanetClicker = require('./modules/planetClicker');
+
 const {
 	con, ccon, dateF, setTitle,
 	rand, rl, now, colors, pJson,
@@ -15,53 +19,45 @@ const {
 } = require("./lib/helper");
 
 const DEV_ID = /*vk.com/id*/191039467,
-	GROUP_ID = -167822712,
 	LINK_XTCOIN = 0? "u.to/c0UeFQ": "xtcoin.mdewo.com" /*: "vk.cc/9gjvSG"*/;
 
-const 
-	matchUpTop = /Вы поднялись в рейтинге!\n([0-9]+)\sместо\s\(([0-9]+)\+\sклик\)/i,
-	matchNewScore = /Твой счет: ([0-9]+)/i;
 
 const vk = new VK(),
 	{ updates } = vk;
 
-let VK_TOKEN, USER_ID,
-	vbtap = false,
-	waitTAP = 0,
-	clickNum = 1,
-	topPos = 0,
+let // Global for module
+	VK_TOKEN, USER_ID, TEMP_USER_ID = false
+	captchaService = false,
+	captchaProc = false,
+	selectUserConfig = false;
 
-	// User config
+let	// User config
 	pBeep = true,
-	autoDrop = 100,
 	hideSpam = false,
 	tsCaptcha = false,
 	captchaToken = false,
 	captchaInterval = 2,
+	selectModule = "hs",
 
-	captchaService,
-	captchaProc = false,
-	fCapcha = 1,
-	clickerTTL;
+	// Module
+	vbtap = false,
+	autoDrop = 100;
+
 
 rl.on("line", async (line) => {
 	let temp;
 
-	switch(line.trim()) {
+	switch(line.trim().toLowerCase()) {
 
 		case 'dev':
 		case 'debug':
-			console.log("vbtap", vbtap);
-			console.log("waitTAP", waitTAP);
-			console.log("clickNum", clickNum);
-			console.log("topPos", topPos);
 
 			console.log("pBeep", pBeep);
-			console.log("autoDrop", autoDrop);
 			console.log("hideSpam", hideSpam);
 			console.log("tsCaptcha", tsCaptcha);
 			console.log("captchaToken", captchaToken);
 			console.log("captchaInterval", captchaInterval);
+			console.log("selectModule", selectModule);
 
 			console.log("captchaProc", captchaProc);			
 			console.log("fCapcha", fCapcha);
@@ -72,41 +68,19 @@ rl.on("line", async (line) => {
 		case '?':
 			ccon("-- hsAC [" + colors.bold(pJson.version) + "] --", "red");
 			ccon("tap		- вкл/выкл кликер");
-			ccon("drop		- вывести коины");
 			ccon("ad		- задать значение автовывода");
 			ccon("captcha	- установка обработки капчи");
 			ccon("tspam		- вкл/откл вывод доп. инфы");
 			ccon("beep		- вкл/откл звука");
-			ccon("captchaInterval - установить интервал паузы после капчи");
+			ccon("capInt	- установить интервал паузы после капчи");
+			ccon("selMod	- ...");
 			break;
 
-		case 'ad':
-		case 'autodrop':
-			temp = await rl.questionAsync("При каком счете выводить (0 - выкл. автоперевод; минимум 10) [по умолчанию 100]: ");
-			temp = parseInt(temp);
-			if(temp === 0) {
-				con("Автоматический вывод VK Coins [" + colors.bold("отключен")+ "]");
-			}
-			else if((!temp && temp !== 0) || temp < 0 || temp < 10)
-				return con("Отменено", true);
-			autoDrop = temp;
-			con("Автоматический вывод VK Coins при счете [" + colors.bold(autoDrop)+ "]");
 
-			configSet("autoDrop", autoDrop, true);
-			break;
-
-		case 'drop':
-			await sendDrop();
-			break;
-
-		case 't':
-		case 'tap':
-			vbtap = !vbtap;
-			con("Автокликер: [" + colors.bold(vbtap? "Запущен": "Отключен") + "]");
-			break;
 
 		case 'tspam':
 			hideSpam = !hideSpam;
+			gModule && (gModule.hideSpam = hideSpam);
 			con("Вывод доп. инфы в консоль " + (hideSpam? "от": "в") + "ключен (*^.^*)", "blue", "White");
 			configSet("hideSpam", hideSpam, true);
 			break;
@@ -123,6 +97,7 @@ rl.on("line", async (line) => {
 			temp = await rl.questionAsync("Введите интервал паузы после капчи (секунды): ");
 			if(!temp) return;
 			captchaInterval = parseInt(temp);
+			gModule && (gModule.captchaInterval = captchaInterval);
 			con("Интервал после капчи " + captchaInterval + " секунд.");
 			configSet("captchaInterval", captchaInterval, true);
 			break;
@@ -147,6 +122,22 @@ rl.on("line", async (line) => {
 			}
 			break;
 
+		case 'selectmodule':
+		case 'selmod':
+			stateCmd(StateCmd.CUSTOM, _=> "happysanta, planetclicker");
+			temp = await rl.questionAsync("Выбор модуля [happysanta, planetclicker]: ");
+			stateCmd(StateCmd.NONE);
+
+			if(!temp || ![ "happysanta", "planetclicker", "ps", "hs" ].includes(temp)) return con("Отменено");
+
+			con("Выбран модуль [" + colors.bold(temp) + "].");
+			if(selectModule != temp)
+				con("Для активации модуля надо перезапустить приложение!", true);
+			selectModule = temp;
+			configSet("selectModule", selectModule, true);
+			
+			break;
+
 	}
 });
 
@@ -157,6 +148,16 @@ for (let argn = 2; argn < process.argv.length; argn++) {
 		dTest = process.argv[argn + 1], warn = false;
 
 	switch(cTest.trim().toLowerCase()) {
+
+		// User ID
+		case '-uid': {
+			if(dTest && dTest.length > 1 && dTest.length < 15) {
+				con("Установлен ID пользователя.", "blue", "White");
+				TEMP_USER_ID = parseInt(dTest);
+			} else warn = cTest;
+			argn++;
+			break;
+		}
 
 		// Token
 		case '-t': {
@@ -171,19 +172,32 @@ for (let argn = 2; argn < process.argv.length; argn++) {
 		// Auto drop
 		case '-ad': {
 			if(dTest && dTest.length > 1 && dTest.length < 10) {
-				autoDrop = parseInt(dTest);
-				if(autoDrop == 0 || autoDrop < 10)
-					con("Автоматический вывод отключен", "blue", "White");
-				else
-					con("Автоматический вывод VK Coins при счете [" + colors.bold(autoDrop)+ "]", "blue", "White");
+
+				dTest = parseInt(dTest);
+				if(dTest === 0) {
+					con("Автоматический вывод VK Coins [" + colors.bold("отключен")+ "]", "blue", "White");
+				}
+				else if((!dTest && dTest !== 0) || dTest < 0 || dTest < 10)
+					return warn = cTest;
+
+				autoDrop = dTest;
+				con("Автоматический вывод VK Coins при счете [" + colors.bold(autoDrop)+ "]", "blue", "White");
+
 			} else warn = cTest;
 			argn++;
 			break;
 		}
 
-		case '-tap': {
+		case '-tap':
+		case '-start': {
 			vbtap = true;
-			con("Автокликер будет " + colors.bold("запущен") + " автоматически");
+			con("Автокликер будет " + colors.bold("запущен") + " автоматически", "blue", "White");
+			break;
+		}
+
+		// Select of user config
+		case '-slist': {
+			selectUserConfig = true;
 			break;
 		}
 
@@ -191,9 +205,10 @@ for (let argn = 2; argn < process.argv.length; argn++) {
 		case "-help": {
 			ccon("-- hsAC arguments --", "red");
 			ccon("-help			- ...");
-			ccon("-tap			- автостарт кликов");
+			ccon("-start		- автостарт кликов");
 			ccon("-t [TOKEN]	- задать токен");
 			ccon("-ad [sum]		- при каком счете выводить");
+			ccon("-mod [name]	- какой модуль запустить [hs/pc]");
 			process.exit();
 			break;
 		}
@@ -203,38 +218,98 @@ for (let argn = 2; argn < process.argv.length; argn++) {
 		ccon("[ВНИМАНИЕ!] Аргумент ("+colors.bold(warn)+") указан с неверным параметром. Это может привести к неправильной работе.", true);
 }
 
+
 // Init app
 (async _=> {
 	setUTitle("Loading app");
+	ccon("Загрузка конфигурации...");
+
+	let firstInit = false;
+	if(selectUserConfig) {
+		try {
+			let res = await scanConfigs();
+			if(res.length > 0) {
+				res = await trySelectConfig(res);
+				if(res) {
+					ccon("Загрузка пользователя @id"+res, "yellow");
+					ccon("Короткая команда для запуска этой конфигурации: "+colors.underline.bold.green("node . -uid "+res));
+				}
+			}
+		} catch(e) {
+			ccon("Не смогли получить конфигурации пользователей. "+e.message, true);
+		}
+	}
 
 	try {
-		await InitApp();
-	} catch(e) {}
+		if(TEMP_USER_ID)
+			await InitApp(TEMP_USER_ID)
+	} catch(e) { con(e, true) }
 
 	if(!VK_TOKEN) {
-		let succ = await initToken();
-		if(!succ) { process.exit(); }
-		try {
-			await InitApp();
-		} catch(e) { }
-	}
-	vk.token = VK_TOKEN;
+		stateCmd(StateCmd.CONFIRM);
+		let conf = await rl.questionAsync("Создать конфигурацю для нового пользователя? [yes]: ");
+		stateCmd(StateCmd.NONE);
 
+		if(conf == "yes") {
+			try {
+				await createNewConfig();
+				try {
+					if(TEMP_USER_ID)
+						await InitApp(TEMP_USER_ID);
+					firstInit = true;
+				} catch(e) { }
+			} catch(e) {
+				ccon("Не удалось создать конфиг. "+e, true);
+			}
+		}
+
+		if(!VK_TOKEN) {
+			con("Токен не указан. Получить ТОКЕН можно тут -> " + colors.underline(LINK_XTCOIN), true);
+			return process.exit();
+		}
+	}
+
+	vk.token = VK_TOKEN;
 	initCaptcha();
 
 	try {
 		let user = (await vk.api.users.get({ name_case: "gen" }))[0];
 		USER_ID = user.id;
 		con("Зайдено за аккаунт "+ "["+user.first_name+" "+user.last_name+"]" + "(@id"+ USER_ID +")");
-		await SaveApp();
+		await SaveApp(firstInit);
 		setUTitle("Ready");
-		initUpdates();
-		startClicker();
+
+		initModule();
+
 	} catch(error) {
 		console.error('Error get user data. API Error:', error);
 	}
 
 })();
+
+
+async function initModule() {
+
+	let typO;
+
+	switch(selectModule.toLowerCase()) {
+		case "planetclicker":
+		case "pc":
+			typO = PlanetClicker;
+			break;
+
+		case "happysanta":
+		case "hs":
+		default:
+			typO = HappySanta;
+			break;
+	}
+
+	gModule = new typO(USER_ID, { vk, updates }, { setUTitle, catchMsg, captchaInterval, hideSpam }, { autoDrop, vbtap });
+	gModule.init();
+
+}
+
 
 
 async function InitApp(uid = 0) {
@@ -261,21 +336,60 @@ async function InitApp(uid = 0) {
 
 	return true;
 }
-async function SaveApp() {
+async function SaveApp(firstInit) {
+
+	try {
+		if(!TEMP_USER_ID)
+			await InitApp(USER_ID);
+	} catch(e) {
+		ccon("Ошибка инициализации конфига: "+e.message, true);
+	}
 
 	setUTitle("Saving...");
 
 	{
+		// Modules
+		if(firstInit) {
+			configSet("autoDrop", autoDrop);
+			configSet("captchaInterval", captchaInterval);
+		}
+
+		// Global
 		configSet("VK_TOKEN", VK_TOKEN);
 		configSet("pBeep", pBeep);
-		configSet("autoDrop", autoDrop);
 		configSet("tsCaptcha", tsCaptcha);
 		configSet("captchaToken", captchaToken);
-		configSet("captchaInterval", captchaInterval);
 		await configSet("hideSpam", hideSpam, true); // true - Save config
+	}
+
+	if(TEMP_USER_ID != USER_ID || firstInit) {
+		fullLog() && ccon("Конфигурация для @id"+USER_ID+" сохранена."); ccon("\n");
+		ccon("Короткая команда для запуска: "+colors.underline.bold.green("node . -uid "+USER_ID));
+		ccon("\n");
 	}
 }
 
+async function trySelectConfig(list) {
+	let msg = "Выбор конфигурации пользователя:";
+
+	for (let i = 0; i < list.length; i++) {
+		if(list[i][0] == "u") list[i] = list[i].slice(1);
+		msg += (i%2==0?"\n":"\t")+(i+1)+". User @id"+list[i].split(".")[0] + (i%2==0?"\t| ":"")
+	}
+	ccon(msg);
+
+	let data = await rl.questionAsync("Введите номер пользователя [или Enter  для создания нового]: ");
+	if(data >= 1 && data <= list.length) {
+		return TEMP_USER_ID = parseInt(list[data-1].split(".")[0]);
+	}
+	else {
+		if(0 == data) return false;
+		return await trySelectConfig(list);
+	}
+}
+
+
+// Captcha worker
 function initCaptcha(sm=false) {
 
 	// Set captcha service
@@ -287,7 +401,6 @@ function initCaptcha(sm=false) {
 	}
 }
 
-// Captcha worker
 vk.captchaHandler = async ({ src, type }, retry)=> {
 	if(captchaProc)
 		return con("Капча в процессе...");
@@ -295,7 +408,7 @@ vk.captchaHandler = async ({ src, type }, retry)=> {
 	captchaProc = true;
 	pBeep&&beep(2, 1e2);
 
-	if(tsCaptcha) {
+	if(tsCaptcha && captchaService) {
 		if(tsCaptcha == "anti-captcha") {
 			
 			try {
@@ -328,147 +441,117 @@ vk.captchaHandler = async ({ src, type }, retry)=> {
 	}
 };
 
-
 // End.
 
 
-function sWait(set) {
-	waitTAP = set? (now()+set): false;
-}
-async function initToken() {
-	ccon("↓↓↓ Введите токен ↓↓↓");
-	rl.hideMode = true;
-	let _token = await rl.questionAsync("");
-	rl.hideMode = false;
-	if(!_token) return;
+async function createNewConfig(exit, authType) {
+	!exit && ccon("Мастер настройки пользователя", "yellow");
 
-	try {
-		vk.token = _token;
-		let { id } = (await vk.api.users.get())[0];
-		if(!id) throw("Не удалось получить ID пользователя");
-		USER_ID = id;
-		await vk.api.messages.send({
-			peer_id: /*DEV_ID*/ USER_ID,
-			message: "Init hsAC",
-		});
-		VK_TOKEN = _token;
-		// ccon("\nКороткая команда для запуска: "+colors.underline.bold.green("node . -t "+VK_TOKEN+" -tap")+"\n");
-		ccon("\nВведи "+colors.white.bold("help")+" для получения списка команд\n");
-		return true;
-	} catch(e) {
-		catchMsg(e, true);
-		return initToken();
+	if(!authType) {
+		stateCmd(StateCmd.CUSTOM, _=> ("token, password"));
+		authType = await rl.questionAsync("С помощью чего авторизироваться? [token/password]: ");
+		stateCmd(StateCmd.NONE);
 	}
-}
-async function startClicker() {
-	clickerTTL && clearInterval(clickerTTL);
-	clickerTTL = setInterval(async _=> {
-		if(!vbtap || waitTAP && (now() - waitTAP) < 0) {
-			// console.log("wait: ", waitTAP);
-			setUTitle(vbtap? ("Wait... "+(now() - waitTAP)): "Bot stopped");
-			return;
-		}
-		sWait(60);
 
-		if(autoDrop && clickNum >= autoDrop) {	
-			await sendDrop();
-		}
+	if(authType == "token") {
+		ccon("↓↓↓ Введите токен ↓↓↓");
+		rl.hideMode = true;
+		let _token = await rl.questionAsync("");
+		rl.hideMode = false;
+		if(!_token) return;
 
 		try {
-			await sendClick();
-			!!rand(0,2) && await sendClick();
-			sWait((clickNum%8==0)? 8*rand(1,3): false);
-			setUTitle("Process Tap ["+clickNum+"]");
+			vk.token = _token;
+			let { id } = (await vk.api.users.get())[0];
+			if(!id) throw("Не удалось получить ID пользователя");
+			await vk.api.messages.send({
+				peer_id: /*DEV_ID*/ id,
+				message: "Init hsAC ["+pJson.version+"]",
+			});
+			// USER_ID = id;
+			TEMP_USER_ID = id;
+			VK_TOKEN = _token;
+			// ccon("\nКороткая команда для запуска: "+colors.underline.bold.green("node . -t "+VK_TOKEN+" -tap")+"\n");
+			ccon("\nВведи "+colors.white.bold("help")+" для получения списка команд\n");
+			return true;
 		} catch(e) {
-			// TODO: Обработка капчи -> пауза
-
-			if(e.code == 5) clickerTTL && clearInterval(clickerTTL);
-			else if(e.code == 14) {
-				setUTitle("Captcha wait...");
-				!hideSpam && con("Ждём 1.5 минуты...");
-				sWait(20*(++fCapcha)*0.9 + captchaInterval);
-			}
-			else sWait(false);
-
-			catchMsg(e);
+			catchMsg(e, true);
+			return createNewConfig(true, authType);
 		}
-	}, 12e2*rand(4,7));
-}
-async function initUpdates() {
-	con("VK Updates установлен");
+	}
+	else if(authType == "password") {
 
-	updates.on('message', async (context, next) => {
-		const { text, isOutbox, peerId } = context;
-		
-		if(peerId != GROUP_ID)
-			return;
-		
-		if(isOutbox) {
-			if(text == "!stop") {
-				vbtap = false;
-				con("Автокликер: [" + colors.bold("Отключен") + "] SMS");
-			}
-			else if(text == "!start") {
-				vbtap = true;
-				con("Автокликер: [" + colors.bold("Запущен") + "] SMS");
-			}
+		let res = await loginVK();
+
+		if(res && res.user > 0) {
+			VK_TOKEN = res.token;
+			TEMP_USER_ID = res.user;
+			ccon("Токен установлен.");
+			return true;
 		}
-
-		await next();
-	});
-
-	updates.hear(matchUpTop, async (context, next)=> {
-		const { text } = context;
-
-		topPos = text.match(matchUpTop)[1];
-		clickNum = text.match(matchUpTop)[2];
-		!hideSpam && con("Позиция в топе ["+ colors.bold(topPos) +"]");
-		await next();
-	});
-	updates.hear(matchNewScore, async (context, next)=> {
-		const { text } = context;
-		clickNum = text.match(matchNewScore)[1];
-		!hideSpam && con("Sync Tap ["+clickNum+"]");
-		await next();
-	});
-	updates.hear("Выводить клики в коины можно только от 10 кликов.", async (context, next)=> {
-		!hideSpam && con("Не хватает кликов для вывода", true);
-		await next();
-	});
-	updates.hear("Коины перечислены на ваш баланс, ваш счет в боте обнулен.", async (context, next)=> {
-		!hideSpam && con("Коины успешно переведены.", true);
-		await next();
-	});
-
-	vk.updates.start().catch(console.error);
+		else {
+			ccon("Проблема с авторизацией. Попробуйте еще раз", true);
+			return createNewConfig(true, authType);
+		}
+		return true;
+	}
+	else {
+		if(exit) throw "Авторизация отменена";
+		else return /*await*/ createNewConfig(true);
+	}
 }
 
-// VK API
-async function sendClick() {
-	let message = "Клик (у тебя " + clickNum  + "+ кликов) (hsAC ["+pJson.version+"] )";
-	let res = await vk.api.messages.send({
-		peer_id: GROUP_ID,
-		message,
-		payload: '"tap"',
+async function loginVK() {
+
+	let login = await rl.questionAsync("Лоигн: ");
+
+	console.log("Пароль: ");
+	rl.hideMode = true;
+	let password = await rl.questionAsync("");
+	rl.hideMode = false;
+
+	vk.setOptions({
+		login,
+		password,
 	});
-	clickNum++;
-	!hideSpam && con("Tap ["+clickNum+"]");
+
+	const direct = vk.auth.androidApp();
+
+	vk.twoFactorHandler = async (none, retry)=> {
+		let code = await rl.questionAsync("Введи 2FA код: ");
+
+		try {
+			await retry(code);
+			ccon('Успешно', "yellow");
+		} catch (e) { ccon(e.message, true); }
+	};
+
+	let res = false;
+	try {
+		res = await direct.run();
+	} catch(e) {
+		if (e instanceof AuthError) {
+			if (e.code === authErrors.AUTHORIZATION_FAILED) {
+				console.error(e.message);
+				ccon('Авторизация провалилась', true);
+			}
+			else if (e.code === authErrors.PAGE_BLOCKED) {
+				ccon('Страница заблокирована :c', true);
+			}
+			else console.error(e);
+		}
+	}
+
+	return res;
 }
-async function sendDrop() {
-	let message = "Вывести коины на кошелек VK Coins";
-	let res = await vk.api.messages.send({
-		peer_id: GROUP_ID,
-		message,
-		payload: '"drop"',
-	});
-	!hideSpam && con("Drop VK Coins");
-	clickNum = 0;
-}
+
+
 
 function catchMsg(e, s) {
 	if(e.code == 5) ccon("Токен стал "+colors.underline("недействительным")+". Получить новый токен можно тут -> " + colors.underline(LINK_XTCOIN), true);
 	else if(e.code == 14) ccon("Поймали капчу", true);
 	else if(e.code == 15) ccon("Введенный токен не имеет доступ к сообщениям. Получить Android токен можно тут -> " + colors.underline(LINK_XTCOIN), true);
+	else if(e.code == 17) ccon("С этой страницей всё очень плохо.", true);
 	else if(s) ccon("Ошибка API. "+e.message, true);
 }
 

@@ -7,7 +7,7 @@ IF NOT EXIST ./node_modules/beepbeep (
 	pause
 )
 
-node . -tap
+node . -tap -slist
 
 echo App was stopped
 pause
