@@ -1,7 +1,11 @@
 # hsAutoClicker
-hsAutoClicker - автоматический кликер для бота в ВК [Бот кликер](https://vk.com/hsclicker)
+hsAutoClicker - автоматический кликер
 
-[![hsAC 1.0.4 download](https://img.shields.io/badge/hsAC%201.0.4-download-blue.svg?logo=github&style=for-the-badge)](https://github.com/xTCry/hsAutoClicker/archive/master.zip)
+Доступны модули для:
+* `HappySanta`  -  [Бот кликер](https://vk.com/hsclicker)
+* `PlanetClicker`  -  [PlanetClicker](https://vk.com/PlanetClicker) *(hellow aeonixlegit)*
+
+[![hsAC 1.0.5 download](https://img.shields.io/badge/hsAC%20[Lermo]%201.0.5-download-blue.svg?logo=github&style=for-the-badge)](https://github.com/xTCry/hsAutoClicker/archive/lermo.zip)
 
 ![Запуск](https://pp.userapi.com/c856036/v856036425/220ad/dwhxo8-tVUU.jpg)
 
@@ -22,10 +26,14 @@ npm i
 * `-t [TOKEN]`      - задает токен
 * `-ad [SUM]`       - при каком счете выводить койны
 * `-tap`            - автостарт кликов
+* `-uid`            - id пользователя для конфига
+* `-mod [NAME]`     - название модуля для кликера `[hs/pc]`
+
+> Доступны в бета версии модули `HappySanta` и `PlanetClicker`
 
 Обычный запуск
 ```shell
-node index.js -tap
+node index.js -tap -slist
 ```
 Только при первом запуске нужно будет ввести [токен](#получение-токена).
 
@@ -44,6 +52,7 @@ node index.js -t AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 ## Команды
 (Можно истользовать кнопку `TAB↔`)
 - `help`       - список доступных команд
+- `selMod`     - выбрать модуль для кликера
 - `tap`        - вкл/выкл автокликера
 - `drop`       - вывести коины
 - `ad`         - задать при каком счете выводить коины

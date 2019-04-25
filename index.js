@@ -73,7 +73,7 @@ rl.on("line", async (line) => {
 			ccon("tspam		- вкл/откл вывод доп. инфы");
 			ccon("beep		- вкл/откл звука");
 			ccon("capInt	- установить интервал паузы после капчи");
-			ccon("selMod	- ...");
+			ccon("selMod	- выбрать модуль для кликера");
 			break;
 
 
@@ -164,6 +164,19 @@ for (let argn = 2; argn < process.argv.length; argn++) {
 			if(dTest && dTest.length > 80 && dTest.length < 90) {
 				con("Установлен токен.", "blue", "White");
 				VK_TOKEN = dTest;
+			} else warn = cTest;
+			argn++;
+			break;
+		}
+
+		// Module
+		case '-mod': {
+			if(dTest && dTest.length > 80 && dTest.length < 90) {
+
+				if(!dTest || ![ "happysanta", "planetclicker", "ps", "hs" ].includes(dTest)) return con("Отменено");
+
+				con("Выбран модуль [" + colors.bold(dTest) + "].", "blue", "White");
+				selectModule = dTest;
 			} else warn = cTest;
 			argn++;
 			break;
