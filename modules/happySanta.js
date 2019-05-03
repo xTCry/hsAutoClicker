@@ -11,12 +11,12 @@ const {
 } = require("../lib/helper");
 
 const 
-	matchUpTop = /Вы поднялись в рейтинге!\n([0-9]+)\sместо\s\(([0-9]+)\+\sклик\)/i,
+	matchUpTop = /Вы поднялись в рейтинге!\n([0-9]+)\sместо\s\(([0-9]+)\+\s/i, // клик\)
 	matchNewScore = /Твой счет: ([0-9]+)/i;
 
 class Module {
 
-	constructor( USER_ID, { updates, vk }, { setUTitle, catchMsg, captchaInterval, hideSpam }, { autoDrop, vbtap } ) {
+	constructor( USER_ID, { updates, vk }, { setUTitle, catchMsg, captchaInterval, hideSpam }, { autoDrop, vbtap, HS_Payload } ) {
 
 		this.USER_ID = USER_ID;
 		this.vk = vk;
@@ -41,6 +41,7 @@ class Module {
 		// Module
 		this.autoDrop = autoDrop;
 		this.vbtap = vbtap;
+		this.HS_Payload = HS_Payload;
 
 		con("Модуль [" + colors.bold("HappySanta") + "] инициализирован");
 	}
@@ -69,6 +70,7 @@ class Module {
 					console.log("waitTAP", this.waitTAP);
 					console.log("clickNum", this.clickNum);
 					console.log("topPos", this.topPos);
+					console.log("HS_Payload", this.HS_Payload);
 
 					console.log("autoDrop", this.autoDrop);
 					break;
@@ -140,7 +142,8 @@ class Module {
 
 		upd.hear(matchUpTop, async (context, next)=> {
 			const { text } = context;
-
+			await context.loadMessagePayload();
+			try { this.vjuhPayload(context.payload); }catch(e) { }
 			this._topPos = text.match(matchUpTop)[1];
 			this._clickNum = text.match(matchUpTop)[2];
 
@@ -149,6 +152,8 @@ class Module {
 		});
 		upd.hear(matchNewScore, async (context, next)=> {
 			const { text } = context;
+			await context.loadMessagePayload();
+			try { this.vjuhPayload(context.payload); }catch(e) { }
 			this._clickNum = text.match(matchNewScore)[1];
 			!this.hideSpam && con("Sync Tap ["+this.clickNum+"]");
 			await next();
@@ -221,12 +226,26 @@ class Module {
 		let res = await this.vk.api.messages.send({
 			peer_id: GROUP_ID,
 			message,
-			payload: '"tap"',
+			payload: this.HS_Payload,
 		});
 
 		this._clickNum++;
 		!this.hideSpam && con("Tap ["+this.clickNum+"]");
 		return this;
+	}
+
+	vjuhPayload({ keyboard }) {
+		if(!keyboard) return;
+		const btns = keyboard.buttons;
+		if(btns.length > 2) {
+			const tapBtn = btns[0][0];
+			// tapBtn.action.label // Parse text
+			if(this.HS_Payload != tapBtn.action.payload) {
+				this.HS_Payload = tapBtn.action.payload;
+				con("ReSync KB payload ["+ colors.bold(this.HS_Payload) +"]", "red");
+				configSet("HS_Payload", this.HS_Payload, true);
+			}
+		}
 	}
 
 
@@ -238,6 +257,5 @@ class Module {
 	}
 
 }
-
 
 module.exports = Module

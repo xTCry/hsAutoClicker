@@ -41,6 +41,7 @@ let	// User config
 
 	// Module
 	vbtap = false,
+	HS_Payload = '"cclick"',
 	autoDrop = 100;
 
 
@@ -318,7 +319,7 @@ async function initModule() {
 			break;
 	}
 
-	gModule = new typO(USER_ID, { vk, updates }, { setUTitle, catchMsg, captchaInterval, hideSpam }, { autoDrop, vbtap });
+	gModule = new typO(USER_ID, { vk, updates }, { setUTitle, catchMsg, captchaInterval, hideSpam }, { autoDrop, HS_Payload, vbtap });
 	gModule.init();
 
 }
@@ -341,6 +342,7 @@ async function InitApp(uid = 0) {
 		VK_TOKEN = configGet("VK_TOKEN", VK_TOKEN);
 		pBeep = configGet("pBeep", pBeep);
 		autoDrop = configGet("autoDrop", autoDrop);
+		HS_Payload = configGet("HS_Payload", HS_Payload);
 		hideSpam = configGet("hideSpam", hideSpam);
 		tsCaptcha = configGet("tsCaptcha", tsCaptcha);
 		captchaToken = configGet("captchaToken", captchaToken);
@@ -364,6 +366,7 @@ async function SaveApp(firstInit) {
 		// Modules
 		if(firstInit) {
 			configSet("autoDrop", autoDrop);
+			configSet("HS_Payload", HS_Payload);
 			configSet("captchaInterval", captchaInterval);
 		}
 
