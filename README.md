@@ -3,9 +3,9 @@ hsAutoClicker - автоматический кликер
 
 Доступны модули для:
 * `HappySanta`  -  [Бот кликер](https://vk.com/hsclicker)
-* `PlanetClicker`  -  [PlanetClicker](https://vk.com/PlanetClicker) *(hellow aeonixlegit)*
+* `PlanetClicker`  -  [PlanetClicker](https://vk.com/PlanetClicker)
 
-[![hsAC 1.0.5 download](https://img.shields.io/badge/hsAC%20[Lermo]%201.0.5-download-blue.svg?logo=github&style=for-the-badge)](https://github.com/xTCry/hsAutoClicker/archive/lermo.zip)
+[![hsAC download][cnimg]](https://github.com/xTCry/hsAutoClicker/archive/lermo.zip)
 
 ![Запуск](https://pp.userapi.com/c856036/v856036425/220ad/dwhxo8-tVUU.jpg)
 
@@ -71,3 +71,5 @@ node index.js -t AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 
 
 [![Донат](https://img.shields.io/badge/Донат-Qiwi-orange.svg)](https://qiwi.me/xtcry)
+
+[cnimg]: https://img.shields.io/badge/hsAC%20[Lermo]%201.0.6-download-blue.svg?logo=github&style=for-the-badge "1.0.6"
